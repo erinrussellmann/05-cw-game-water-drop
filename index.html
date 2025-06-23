@@ -8,15 +8,52 @@
 </head>
 <body>
     <div class="game-wrapper">
-        <h1 class="game-title">Water Drop</h1>
-        <p class="game-tagline">Catch the good drops, avoid the bad ones!</p>
-        <div class="score-panel">
-            <div class="score">Score: <span id="score">0</span></div>
-            <div class="timer">Time: <span id="time">30</span>s</div>
-            <button id="start-btn">Start Game</button>
+        <!-- Landing Page -->
+        <div id="landing-screen" class="screen active">
+            <h1 class="game-title">Water Drop by Charity: Water</h1>
+            <div class="instructions">
+                <ul>
+                    <li>Tap clean <span class="blue-drop">blue</span> drops.</li>
+                    <li>Avoid dirty <span class="green-drop">green</span> drops.</li>
+                    <li>Each clean drop tapped = <b>+1</b></li>
+                    <li>Dirty or missed clean drops = <b>-1</b></li>
+                    <li>Game lasts <b>60 seconds</b></li>
+                </ul>
+            </div>
+            <button id="start-btn">Start</button>
         </div>
-        
-        <div id="game-container">
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <img src="img/cw_logo.png" alt="Charity: Water Logo" class="logo-placeholder" style="height:48px; width:auto;" />
+                <div class="score-timer">
+                    <span class="score">Score: <span id="score">0</span></span>
+                    <span class="timer">Time: <span id="time">60</span>s</span>
+                </div>
+                <button id="reset-btn" class="reset-btn">Reset</button>
+            </div>
+            <div class="bucket-panel">
+                <div id="bucket-icon">
+                    <!-- SVG/CSS bucket, water fill will be handled in CSS/JS -->
+                    <div class="bucket-body">
+                        <div id="bucket-water"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="game-container">
+                <!-- Falling drops will be generated here -->
+                <div id="river">
+                    <!-- Drops fall here -->
+                    <div id="lake"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen">
+            <h2>Game Over</h2>
+            <div class="final-score">Final Score: <span id="final-score">0</span></div>
         </div>
     </div>
     

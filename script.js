@@ -1,45 +1,141 @@
 // Variables to control game state
-let gameRunning = false; // Keeps track of whether game is active or not
-let dropMaker; // Will store our timer that creates drops regularly
+let gameRunning = false;
+let dropMaker;
+let score = 0;
+let time = 60;
+const timeEl = document.getElementById('time');
+let timerInterval;
+let dropActive = false;
 
-// Wait for button click to start the game
-document.getElementById("start-btn").addEventListener("click", startGame);
+// DOM Elements
+const scoreEl = document.getElementById('score');
+const gameContainer = document.getElementById('game-container');
+const startBtn = document.getElementById('start-btn');
+const landingScreen = document.getElementById('landing-screen');
+const gameScreen = document.getElementById('game-screen');
+const gameoverScreen = document.getElementById('gameover-screen');
+const finalScoreEl = document.getElementById('final-score');
+const resetBtn = document.getElementById('reset-btn');
+const river = document.getElementById('river');
+
+// Start the game when the start button is pressed
+startBtn.addEventListener("click", startGame);
+resetBtn.addEventListener("click", function() {
+    if (gameScreen.classList.contains('active')) {
+        // If in game, restart immediately
+        endGame();
+        setTimeout(startGame, 100); // Small delay to clear drops
+    } else {
+        // If on game over screen, go to landing
+        resetGame();
+    }
+});
 
 function startGame() {
-  // Prevent multiple games from running at once
-  if (gameRunning) return;
-
-  gameRunning = true;
-
-  // Create new drops every second (1000 milliseconds)
-  dropMaker = setInterval(createDrop, 1000);
+    if (gameRunning) return;
+    score = 0;
+    time = 60;
+    scoreEl.textContent = score;
+    timeEl.textContent = time;
+    gameRunning = true;
+    landingScreen.classList.remove('active');
+    landingScreen.style.display = 'none';
+    gameScreen.classList.add('active');
+    gameScreen.style.display = 'block';
+    gameoverScreen.classList.remove('active');
+    gameoverScreen.style.display = 'none';
+    clearInterval(dropMaker);
+    clearInterval(timerInterval);
+    // Start first drop
+    createDrop();
+    timerInterval = setInterval(updateTimer, 1000);
 }
 
+// Randomly decide drop type
+function randomDropType() {
+    return Math.random() < 0.7 ? 'blue' : 'green'; // 70% blue, 30% green
+}
+
+// Create a drop and animate it
 function createDrop() {
-  // Create a new div element that will be our water drop
-  const drop = document.createElement("div");
-  drop.className = "water-drop";
+    const drop = document.createElement('div');
+    const type = randomDropType();
+    drop.classList.add('drop', type === 'blue' ? 'blue-drop' : 'green-drop');
+    drop.style.left = Math.random() * 90 + '%';
+    drop.style.top = '-40px';
+    drop.dataset.type = type;
+    drop.dataset.clicked = "false";
 
-  // Make drops different sizes for visual variety
-  const initialSize = 60;
-  const sizeMultiplier = Math.random() * 0.8 + 0.5;
-  const size = initialSize * sizeMultiplier;
-  drop.style.width = drop.style.height = `${size}px`;
+    drop.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (drop.dataset.clicked === "true") return; // Prevent double click
+        drop.dataset.clicked = "true";
+        drop.style.transition = 'opacity 0.3s';
+        drop.style.opacity = '0';
+        setTimeout(() => {
+            if (drop.parentNode) drop.remove();
+            if (gameRunning) createDrop(); // Release next drop after click
+        }, 300);
+        // Update score
+        if (type === 'blue') {
+            score++;
+        } else {
+            score--;
+        }
+        scoreEl.textContent = score;
+    });
 
-  // Position the drop randomly across the game width
-  // Subtract 60 pixels to keep drops fully inside the container
-  const gameWidth = document.getElementById("game-container").offsetWidth;
-  const xPosition = Math.random() * (gameWidth - 60);
-  drop.style.left = xPosition + "px";
+    river.appendChild(drop);
+    animateDrop(drop, type);
+}
 
-  // Make drops fall for 4 seconds
-  drop.style.animationDuration = "4s";
+function animateDrop(drop, type) {
+    let pos = -40;
+    const speed = Math.random() * 1 + 0.7; // slower speed
+    function frame() {
+        pos += speed;
+        drop.style.top = pos + 'px';
+        if (pos < river.offsetHeight - 80) { // 80px = lake height
+            requestAnimationFrame(frame);
+        } else {
+            // Only remove if not already clicked/faded
+            if (drop.parentNode && drop.dataset.clicked === "false") {
+                if (type === 'blue') {
+                    score--;
+                    scoreEl.textContent = score;
+                }
+                drop.remove();
+                if (gameRunning) createDrop(); // Release next drop after miss
+            }
+        }
+    }
+    requestAnimationFrame(frame);
+}
 
-  // Add the new drop to the game screen
-  document.getElementById("game-container").appendChild(drop);
+function updateTimer() {
+    time--;
+    timeEl.textContent = time;
+    if (time <= 0) {
+        endGame();
+    }
+}
 
-  // Remove drops that reach the bottom (weren't clicked)
-  drop.addEventListener("animationend", () => {
-    drop.remove(); // Clean up drops that weren't caught
-  });
+function endGame() {
+    gameRunning = false;
+    clearInterval(dropMaker);
+    clearInterval(timerInterval);
+    // Remove all drops
+    while (river.firstChild) river.removeChild(river.firstChild);
+    finalScoreEl.textContent = score;
+    gameScreen.classList.remove('active');
+    gameScreen.style.display = 'none';
+    gameoverScreen.classList.add('active');
+    gameoverScreen.style.display = 'block';
+}
+
+function resetGame() {
+    gameoverScreen.classList.remove('active');
+    gameoverScreen.style.display = 'none';
+    landingScreen.classList.add('active');
+    landingScreen.style.display = 'block';
 }
